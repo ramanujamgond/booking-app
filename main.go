@@ -1,16 +1,32 @@
 package main
 
+// import (
+// 	"booking-app/helper"
+// 	"fmt"
+// 	"strings"
+// )
+
 import (
 	"fmt"
 	"strings"
+	"time"
 )
-
-var conferenceName = "Go Conference"
 
 const conferenceTickets int = 50
 
+var conferenceName = "Go Conference"
 var remainingTickets uint = 50
-var bookings = []string{}
+
+// var bookings = []string{}
+// var bookings = make([]map[string]string, 0)
+var bookings = make([]UserData, 0)
+
+type UserData struct {
+	firstName       string
+	lastName        string
+	email           string
+	numberOfTickets uint
+}
 
 func main() {
 	// var conferenceName string = "Go Conference"
@@ -28,7 +44,7 @@ func main() {
 
 	// fmt.Printf("conferenceName is %T, conferenceTickets is %T, remainingTickets is %T\n", conferenceName, conferenceTickets, remainingTickets)
 
-	greetUsers(conferenceName, conferenceTickets, remainingTickets)
+	greetUsers()
 
 	// fmt.Printf("\nWelcome to %v booking application\n", conferenceName)
 	// fmt.Printf("We have total of %v tickets and %v are still available\n", conferenceTickets, remainingTickets)
@@ -68,7 +84,8 @@ func main() {
 
 		firstName, lastName, email, userTickets := getUserInput()
 
-		isValidName, isValidEmail, isValidTicketNumber := validateYserInput(firstName, lastName, email, userTickets, remainingTickets)
+		// isValidName, isValidEmail, isValidTicketNumber := helper.ValidateUserInput(firstName, lastName, email, userTickets, remainingTickets)
+		isValidName, isValidEmail, isValidTicketNumber := validateUserInput(firstName, lastName, email, userTickets)
 
 		if isValidName && isValidEmail && isValidTicketNumber {
 			// remainingTickets = remainingTickets - userTickets
@@ -100,12 +117,13 @@ func main() {
 			// 	firstNames = append(firstNames, names[0])
 			// }
 
-			bookTicket(remainingTickets, userTickets, bookings, firstName, lastName, email, conferenceName)
+			bookTicket(userTickets, firstName, lastName, email)
+			go sendTicket(userTickets, firstName, lastName, email)
 
-			firstNames := getFirstName(bookings)
+			firstNames := getFirstName()
 
 			// fmt.Printf("These are all our bookings %v\n", bookings)
-			fmt.Printf("The first names of bookinmgs are: %v\n", firstNames)
+			fmt.Printf("The first names of bookings are: %v\n", firstNames)
 			fmt.Printf("\n")
 
 			// var noTickets bool = remainingTickets == 0
@@ -137,23 +155,24 @@ func main() {
 	}
 }
 
-func greetUsers(confName string, confTickets int, remaTickets uint) {
+func greetUsers() {
 	// fmt.Println("Welcome to our conference")
-	fmt.Printf("\nWelcome to %v booking application\n", confName)
-	fmt.Printf("We have total of %v tickets and %v are still available\n", confTickets, remaTickets)
+	fmt.Printf("\nWelcome to %v booking application\n", conferenceName)
+	fmt.Printf("We have total of %v tickets and %v are still available\n", conferenceTickets, remainingTickets)
 	fmt.Println("Get your tickets here to attend")
 }
 
-func getFirstName(bookings []string) []string {
+func getFirstName() []string {
 	firstNames := []string{}
 	for _, booking := range bookings {
-		var names = strings.Fields(booking)
-		firstNames = append(firstNames, names[0])
+		// var names = strings.Fields(booking)
+		// firstNames = append(firstNames, names[0])
+		firstNames = append(firstNames, booking.firstName)
 	}
 	return firstNames
 }
 
-func validateYserInput(firstName string, lastName string, email string, userTickets uint, remainingTickets uint) (bool, bool, bool) {
+func validateUserInput(firstName string, lastName string, email string, userTickets uint) (bool, bool, bool) {
 	isValidName := len(firstName) >= 2 && len(lastName) >= 2
 	isValidEmail := strings.Contains(email, "@")
 	isValidTicketNumber := userTickets > 0 && userTickets <= remainingTickets
@@ -182,10 +201,38 @@ func getUserInput() (string, string, string, uint) {
 	return firstName, lastName, email, userTickets
 }
 
-func bookTicket(remainingTickets uint, userTickets uint, bookings []string, firstName string, lastName string, email string, conferenceName string) {
+func bookTicket(userTickets uint, firstName string, lastName string, email string) {
 	remainingTickets = remainingTickets - userTickets
-	bookings = append(bookings, firstName+" "+lastName)
+
+	// create a map for a user
+	// map is data type in golang for storing key value pair
+	// var userData = make(map[string]string)
+	// userData["firstName"] = firstName
+	// userData["lastName"] = lastName
+	// userData["email"] = email
+	// userData["numberOfTickets"] = strconv.FormatUint(uint64(userTickets), 10)
+
+	// bookings = append(bookings, userData)
+
+	var userData = UserData{
+		firstName:       firstName,
+		lastName:        lastName,
+		email:           email,
+		numberOfTickets: userTickets,
+	}
+
+	bookings = append(bookings, userData)
+
+	fmt.Printf("List of bookings is %v\n", bookings)
 
 	fmt.Printf("\nThank you %v %v for booking %v tickets. You will receive a confirmation email at %v", firstName, lastName, userTickets, email)
 	fmt.Printf("\n%v tickets remaining for %v\n", remainingTickets, conferenceName)
+}
+
+func sendTicket(userTickets uint, firstName string, lastName string, email string) {
+	time.Sleep(10 * time.Second)
+	var ticket = fmt.Sprintf("%v tickets for %v %v", userTickets, firstName, lastName)
+	fmt.Println("##################")
+	fmt.Printf("Sending tickets:\n %v \nto email address %v\n", ticket, email)
+	fmt.Println("##################")
 }
